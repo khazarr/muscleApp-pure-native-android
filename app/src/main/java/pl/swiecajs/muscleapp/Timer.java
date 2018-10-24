@@ -1,5 +1,9 @@
 package pl.swiecajs.muscleapp;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.design.widget.FloatingActionButton;
@@ -12,6 +16,7 @@ import android.view.MenuItem;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.util.Calendar;
 import java.util.Locale;
 
 import pl.swiecajs.muscleapp.util.PrefUtil;
@@ -41,6 +46,30 @@ public class Timer extends AppCompatActivity {
             }
             return null;// not found
         }
+    }
+    
+    public static Long setAlarm(Context context, Long nowSeconds, Long secondsRemaining) {
+        Long wakeUpTime = (nowSeconds + secondsRemaining) * 1000;
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(context, TimerExpiredReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
+        alarmManager.setExact(AlarmManager.RTC_WAKEUP, wakeUpTime, pendingIntent);
+        PrefUtil.setAlarmSetTime(nowSeconds, context);
+        return wakeUpTime;
+    }
+
+    public static void removeAlarm(Context context){
+        Intent intent = new Intent(context, TimerExpiredReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        alarmManager.cancel(pendingIntent);
+        PrefUtil.setAlarmSetTime(0L, context);
+    }
+
+    public static Long nowSeconds = Calendar.getInstance().getTimeInMillis()/1000;
+    public static Long getNowSeconds(){
+        nowSeconds = Calendar.getInstance().getTimeInMillis()/1000;
+        return nowSeconds;
     }
 
 
@@ -105,8 +134,8 @@ public class Timer extends AppCompatActivity {
         super.onResume();
 
         initTimer();
-
-        // TODO: remove background timer, hide notification
+        removeAlarm(this);
+        // TODO: hide notification
     }
 
     @Override
@@ -115,7 +144,8 @@ public class Timer extends AppCompatActivity {
 
         if(timerState == TimerState.RUNNING) {
             timer.cancel();
-            //TODO: start background timer and show notification
+            Long wakeUpTime = setAlarm(this, getNowSeconds(), secondsRemaining);
+            //TODO: show notification
         } else if(timerState == TimerState.PAUSED) {
             //TODO: show notification
         }
@@ -140,10 +170,13 @@ public class Timer extends AppCompatActivity {
                 ? PrefUtil.getSecondsRemaining(this)
                 : timerLengthSeconds;
 
-        //TODO: change secondsRemaining according to where the background timer stopped
-
-        //resume where we left off
-        if (timerState == TimerState.RUNNING) {
+        Long alarmSetTime = PrefUtil.getAlarmSetTime(this);
+        if (alarmSetTime > 0) {
+            secondsRemaining -= getNowSeconds() - alarmSetTime;
+        }
+        if (secondsRemaining <= 0){
+            onTimerFinished();
+        } else if (timerState == TimerState.RUNNING) {
             startTimer();
         }
 

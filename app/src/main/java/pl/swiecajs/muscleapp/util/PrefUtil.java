@@ -52,4 +52,17 @@ public class PrefUtil {
         editor.putLong(SECONDS_REMAININD_ID, seconds);
         editor.apply();
     }
+
+    private static final String ALARM_SET_TIME_ID = "pl.swiecajs.muscleapp.background_time";
+
+    public static Long getAlarmSetTime(Context context) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        return preferences.getLong(ALARM_SET_TIME_ID, 0L);
+    }
+
+    public static void setAlarmSetTime(Long time, Context context) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putLong(ALARM_SET_TIME_ID, time);
+        editor.apply();
+    }
 }
