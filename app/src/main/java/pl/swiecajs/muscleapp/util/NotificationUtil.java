@@ -1,25 +1,28 @@
 package pl.swiecajs.muscleapp.util;
 
-import android.app.PendingIntent;
-import android.content.Context;
-import android.content.Intent;
-import android.media.RingtoneManager;
-import android.support.v4.app.NotificationCompat;
-import android.net.Uri;
-import android.app.TaskStackBuilder;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.os.Build;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
+import android.media.AudioAttributes;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
+import android.os.VibrationEffect;
+import android.support.v4.app.NotificationCompat;
+import android.os.Vibrator;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import pl.swiecajs.muscleapp.AppConstants;
 import pl.swiecajs.muscleapp.R;
 import pl.swiecajs.muscleapp.TimerActivity;
 import pl.swiecajs.muscleapp.TimerNotificationActionReceiver;
-
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class NotificationUtil {
     private static String CHANNEL_ID_TIMER = "menu_timer";
@@ -42,6 +45,7 @@ public class NotificationUtil {
         NotificationManager nManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         createNotificationChannel(CHANNEL_ID_TIMER, CHANNEL_NAME_TIMER, true, nManager);
         nManager.notify(TIMER_ID, nBuilder.build());
+        playNotificationSoundAndVibrate(context);
 
     }
 
@@ -73,19 +77,6 @@ public class NotificationUtil {
 
     }
 
-    public static void showBreakEndsReminder(Context context) {
-        NotificationCompat.Builder nBuilder = getBasicNotificationBuilder(context, CHANNEL_ID_TIMER, true);
-        nBuilder.setContentTitle("Your break almost ended")
-                .setContentText("Get ready, you have 8 seconds!")
-                .setContentIntent(getPendingIntentWithStack(context, TimerActivity.class))
-                .setOngoing(true);
-
-        NotificationManager nManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        createNotificationChannel(CHANNEL_ID_TIMER, CHANNEL_NAME_TIMER, true, nManager);
-
-        nManager.notify(TIMER_ID, nBuilder.build());
-    }
-
     public static void showTimerPaused(Context context){
         Intent resumeIntent = new Intent(context, TimerNotificationActionReceiver.class);
         resumeIntent.setAction(AppConstants.ACTION_RESUME);
@@ -103,6 +94,7 @@ public class NotificationUtil {
         createNotificationChannel(CHANNEL_ID_TIMER, CHANNEL_NAME_TIMER, true, nManager);
 
         nManager.notify(TIMER_ID, nBuilder.build());
+        playNotificationSoundAndVibrate(context);
     }
 
     private static NotificationCompat.Builder getBasicNotificationBuilder(Context context, String channelId, boolean playSound) {
@@ -110,7 +102,9 @@ public class NotificationUtil {
         NotificationCompat.Builder nBuilder = new NotificationCompat.Builder(context, channelId)
                 .setSmallIcon(R.drawable.ic_timer)
                 .setAutoCancel(true)
-                .setDefaults(0);
+                .setDefaults(0)
+                .setVibrate(new long[]{0, 500, 1000});
+
         if(playSound) nBuilder.setSound(notificationSound);
         return nBuilder;
     }
@@ -128,17 +122,35 @@ public class NotificationUtil {
     }
 
     private static void createNotificationChannel(String channelID, String channelName, boolean playSound, NotificationManager notifMan){
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            int channelImportance = playSound? NotificationManager.IMPORTANCE_DEFAULT:NotificationManager.IMPORTANCE_LOW;
-            NotificationChannel nChannel = new NotificationChannel(channelID, channelName, channelImportance);
-            nChannel.enableLights(true);
-            nChannel.setLightColor(Color.BLUE);
-            notifMan.createNotificationChannel(nChannel);
-        }
+        Uri notificationSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        AudioAttributes attributes = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .build();
+        int channelImportance = playSound? NotificationManager.IMPORTANCE_DEFAULT:NotificationManager.IMPORTANCE_LOW;
+        NotificationChannel nChannel = new NotificationChannel(channelID, channelName, channelImportance);
+        nChannel.enableLights(true);
+        nChannel.setLightColor(Color.BLUE);
+        nChannel.enableVibration(true);
+        nChannel.setSound(notificationSound, attributes);
+        notifMan.createNotificationChannel(nChannel);
+
+
     }
 
     public static void hideTimerNotification(Context context){
         NotificationManager nManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         nManager.cancel(TIMER_ID);
+    }
+
+    public static void playNotificationSoundAndVibrate(Context context) {
+        try {
+            Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+            v.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+            Uri notificationSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            Ringtone r = RingtoneManager.getRingtone(context, notificationSound);
+            r.play();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

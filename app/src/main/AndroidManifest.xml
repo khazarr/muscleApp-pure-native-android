@@ -35,6 +35,7 @@
                 <action android:name="resume"></action>
             </intent-filter>
         </receiver>
-    </application>
 
+    </application>
+    <uses-permission android:name="android.permission.VIBRATE"/>
 </manifest>
