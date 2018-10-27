@@ -4,7 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
-import pl.swiecajs.muscleapp.Timer;
+import pl.swiecajs.muscleapp.TimerActivity;
 
 public class PrefUtil {
 
@@ -28,10 +28,10 @@ public class PrefUtil {
 
     private static final String TIMER_STATE_ID = "pl.swiecajs.muscleapp.timer_state";
 
-    public static Timer.TimerState getTimerState(Context context) {
+    public static TimerActivity.TimerState getTimerState(Context context) {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-        int timerStateId = preferences.getInt(TIMER_STATE_ID, Timer.TimerState.STOPPED.getId());
-        return Timer.TimerState.getValue(timerStateId);
+        int timerStateId = preferences.getInt(TIMER_STATE_ID, TimerActivity.TimerState.STOPPED.getId());
+        return TimerActivity.TimerState.getValue(timerStateId);
     }
 
     public static void setTimerState(int timerStateId, Context context) {

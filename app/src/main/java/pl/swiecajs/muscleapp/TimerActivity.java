@@ -19,9 +19,10 @@ import android.widget.TextView;
 import java.util.Calendar;
 import java.util.Locale;
 
+import pl.swiecajs.muscleapp.util.NotificationUtil;
 import pl.swiecajs.muscleapp.util.PrefUtil;
 
-public class Timer extends AppCompatActivity {
+public class TimerActivity extends AppCompatActivity {
 
     public enum TimerState {
         STOPPED(0),
@@ -135,7 +136,7 @@ public class Timer extends AppCompatActivity {
 
         initTimer();
         removeAlarm(this);
-        // TODO: hide notification
+        NotificationUtil.hideTimerNotification(this);
     }
 
     @Override
@@ -145,9 +146,9 @@ public class Timer extends AppCompatActivity {
         if(timerState == TimerState.RUNNING) {
             timer.cancel();
             Long wakeUpTime = setAlarm(this, getNowSeconds(), secondsRemaining);
-            //TODO: show notification
+            NotificationUtil.showTimerRunning(this, wakeUpTime);
         } else if(timerState == TimerState.PAUSED) {
-            //TODO: show notification
+            NotificationUtil.showTimerPaused(this);
         }
 
         PrefUtil.setPreviousTimerLengthSeconds(timerLengthSeconds, this);
@@ -174,6 +175,9 @@ public class Timer extends AppCompatActivity {
         if (alarmSetTime > 0) {
             secondsRemaining -= getNowSeconds() - alarmSetTime;
         }
+
+
+
         if (secondsRemaining <= 0){
             onTimerFinished();
         } else if (timerState == TimerState.RUNNING) {
@@ -205,6 +209,7 @@ public class Timer extends AppCompatActivity {
             @Override
             public void onTick(long millisUntilFinished) {
                 secondsRemaining = millisUntilFinished / 1000;
+
                 updateCountdownUI();
             }
 
@@ -217,7 +222,6 @@ public class Timer extends AppCompatActivity {
 
     private void setNewTimerLength() {
         int lengthInMinutes = PrefUtil.getTimerLength(this);
-//        timerLengthSeconds = lengthInMinutes * 60L;
         timerLengthSeconds = lengthInMinutes * 90L; // 1.5min
         progressBar.setMax(Math.toIntExact(timerLengthSeconds));
     }
