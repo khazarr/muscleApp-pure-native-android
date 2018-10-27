@@ -217,7 +217,8 @@ public class Timer extends AppCompatActivity {
 
     private void setNewTimerLength() {
         int lengthInMinutes = PrefUtil.getTimerLength(this);
-        timerLengthSeconds = lengthInMinutes * 60L;
+//        timerLengthSeconds = lengthInMinutes * 60L;
+        timerLengthSeconds = lengthInMinutes * 90L; // 1.5min
         progressBar.setMax(Math.toIntExact(timerLengthSeconds));
     }
 

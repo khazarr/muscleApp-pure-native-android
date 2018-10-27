@@ -23,6 +23,10 @@
         <receiver
             android:name=".TimerExpiredReceiver"
             android:enabled="true"
+            android:exported="false" />
+        <receiver
+            android:name=".TimerNotificationActionReceiver"
+            android:enabled="true"
             android:exported="false"></receiver>
     </application>
 
